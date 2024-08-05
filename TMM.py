@@ -95,11 +95,35 @@ def amp2field(refractive_index, k, ky, pol = 'TM'):
         pol_multiplier = TMpol
     elif pol == 'TE':
         pol_multiplier = TEpol
-    else:
+    elif pol == 'both':
         pol_multiplier = torch.cat([TMpol, TEpol], dim = -1)
 
-    return ((1., 0), (1., 0.), (-kx / k / pol_multiplier, 0.), (kx / k / pol_multiplier, 0.))
+    pol_dim = torch.ones_like(pol_multiplier)
+    
+    T11 = torch.ones_like(kx)*pol_dim
+    T11 = T11.to(torch.complex64)
 
+    T12 = torch.ones_like(kx)*pol_dim
+    T12 = T12.to(torch.complex64)
+
+    T21 = -kx / k / pol_multiplier
+    T21 = T21.to(torch.complex64)
+
+    T22 = kx / k / pol_multiplier
+    T22 = T22.to(torch.complex64)
+
+    numfreq = kx.size(1)
+    num_angles = ky.size(2)
+    if pol in ['TM', 'TE']:
+        num_pol = 1
+    elif pol == 'both':
+        num_pol = 2
+
+    # Stack them into a 2x2 complex matrix
+    
+    T = torch.stack((T11, T12, T21, T22), dim=-1).view(1, numfreq, num_angles, num_pol, 2, 2)
+
+    return T
 
 def TMM_solver(thicknesses, refractive_indices, n_bot, n_top, k, theta, pol = 'TM'):
     '''
