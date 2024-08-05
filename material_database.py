@@ -38,19 +38,15 @@ class MatDatabase(object):
 			return
 				refractive indices (tensor or tuple of tensor) : number of materials x number of wavelengths
 		'''
-		n_data = np.zeros((len(material_key), wv_in.size(0)))
-		k_data = np.zeros((len(material_key), wv_in.size(0)))
+		n_data = np.zeros((len(material_key), wv_in.size(0)), dtype=np.float32)
+		k_data = np.zeros((len(material_key), wv_in.size(0)), dtype=np.float32)
 		for i in range(len(material_key)):
 			mat = self.mat_database[material_key[i]]
 			n_data[i, :] = np.interp(wv_in, mat[0], mat[1])
 			k_data[i, :] = np.interp(wv_in, mat[0], mat[2])
 
 		if ignoreloss:
-			return torch.tensor(n_data)
+			return torch.complex(torch.tensor(n_data), torch.zeros_like(k_data))
 		else:
-			return (torch.tensor(n_data), torch.tensor(k_data))
-
-
-
-
+			return torch.complex(torch.tensor(n_data), torch.tensor(k_data))
 		
