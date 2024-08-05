@@ -52,16 +52,27 @@ def transfer_matrix_stack(thicknesses, refractive_indices, k, ky, pol = 'TM'):
     '''
     N = thicknesses.size(-1)
     numfreq = refractive_indices.size(-1)
+    batch_size = thicknesses.size(0)
+    num_angles = ky.size(2)  
 
-    T_stack = ((1., 0.), (0., 0.), (0., 0.), (1., 0.))
+    if pol in ['TM', 'TE']:
+        num_pol = 1
+    elif pol == 'both':
+        num_pol = 2
+
+    T_stack = torch.eye(2, 2, dtype=torch.complex64).unsqueeze(0).unsqueeze(0).unsqueeze(0).unsqueeze(0)
+    T_stack = T_stack.repeat(batch_size, numfreq, num_angles, num_pol, 1, 1)
+
     for i in range(N):
         thickness = thicknesses[:, i].view(-1, 1, 1, 1)
         refractive_index = refractive_indices[:, i, :].view(-1, numfreq, 1, 1)
-        T_layer = transfer_matrix_layer(thickness, refractive_index, k, ky, pol)
-        T_stack = matrix_mul(T_stack, T_layer)
+
+        T11, T12, T21, T22 = transfer_matrix_layer(thickness, refractive_index, k, ky, pol)
+        T_layer = torch.stack((T11, T12, T21, T22), dim=-1).view(batch_size, numfreq, num_angles, num_pol, 2, 2)
+
+        T_stack = torch.matmul(T_stack, T_layer)
         
     return T_stack
-
 
 def amp2field(refractive_index, k, ky, pol = 'TM'):
     '''
