@@ -25,20 +25,17 @@ def transfer_matrix_layer(thickness, refractive_index, k, ky, pol):
     else:
         pol_multiplier = torch.cat([TMpol, TEpol], dim = -1)
     
-    T11_R = torch.cos(kx * thickness)
-    T11_I = torch.zeros_like(T11_R)
-    
-    T12_R = torch.zeros_like(T11_R)
-    T12_I = torch.sin(kx * thickness) * k / kx * pol_multiplier
-    
-    T21_R = torch.zeros_like(T11_R)
-    T21_I = torch.sin(kx * thickness) * kx / k / pol_multiplier
-    
-    T22_R = torch.cos(kx * thickness)
-    T22_I = torch.zeros_like(T11_R)
-    
-    return ((T11_R, T11_I), (T12_R, T12_I), (T21_R, T21_I), (T22_R, T22_I))
+    pol_dim = torch.ones_like(pol_multiplier)
 
+    T11 = torch.cos(kx * thickness)*pol_dim
+
+    T12 = torch.sin(kx * thickness) * k / kx * pol_multiplier*1j
+    
+    T21 = torch.sin(kx * thickness) * kx / k / pol_multiplier*1j
+    
+    T22 = torch.cos(kx * thickness)*pol_dim
+    
+    return T11, T12, T21, T22
 
 def transfer_matrix_stack(thicknesses, refractive_indices, k, ky, pol = 'TM'):
     '''
