@@ -2,13 +2,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
 class Generator(nn.Module):
     def __init__(self, params):
         super().__init__()
 
         self.noise_dim = params.noise_dim
         self.thickness_sup = params.thickness_sup
+        self.thickness_l = params.thickness_l
         self.N_layers = params.N_layers
         self.M_materials = params.M_materials
         self.n_database = params.n_database.view(1, 1, params.M_materials, -1).cuda() # 1 x 1 x number of mat x number of freq
@@ -18,23 +18,18 @@ class Generator(nn.Module):
             nn.BatchNorm1d(self.N_layers * (self.M_materials + 1))
         )
 
-
     def forward(self, noise, alpha):
         net = self.FC(noise)
         net = net.view(-1, self.N_layers, self.M_materials + 1)
         
-        thicknesses = torch.sigmoid(net[:, :, 0]) * self.thickness_sup
+        thicknesses = torch.sigmoid(net[:, :, 0]) * (self.thickness_sup - self.thickness_l) + self.thickness_l
         X = net[:, :, 1:]
         
         P = F.softmax(X * alpha, dim = 2).unsqueeze(-1) # batch size x number of layer x number of mat x 1
         refractive_indices = torch.sum(P * self.n_database, dim=2) # batch size x number of layer x number of freq
         
         return (thicknesses, refractive_indices, P.squeeze())
-
-
-
         
-
 class ResBlock(nn.Module):
     """docstring for ResBlock"""
     def __init__(self, dim=16):
@@ -71,6 +66,7 @@ class ResGenerator(nn.Module):
         self.res_layers = params.res_layers
         self.res_dim = params.res_dim
         self.thickness_sup = params.thickness_sup
+        self.thickness_l = params.thickness_l
         self.N_layers = params.N_layers
         self.M_materials = params.M_materials
         self.n_database = params.n_database.view(1, 1, params.M_materials, -1).cuda() # 1 x 1 x number of mat x number of freq
@@ -105,12 +101,10 @@ class ResGenerator(nn.Module):
 
         net = net.view(-1, self.N_layers, self.M_materials + 1)
         
-        thicknesses = torch.sigmoid(self.FC_thickness(net[:, :, 0])) * self.thickness_sup
+        thicknesses = torch.sigmoid(self.FC_thickness(net[:, :, 0])) * (self.thickness_sup - self.thickness_l) + self.thickness_l
         X = net[:, :, 1:]
         
         P = F.softmax(X * alpha, dim = 2).unsqueeze(-1) # batch size x number of layer x number of mat x 1
         refractive_indices = torch.sum(P * self.n_database, dim=2) # batch size x number of layer x number of freq
         
         return (thicknesses, refractive_indices, P.squeeze())
-
-
