@@ -40,10 +40,6 @@ class Generator(nn.Module):
             refractive_indices = torch.sum(P * self.n_database, dim=2) # batch size x number of layer x number of freq
             return (thicknesses, refractive_indices, P.squeeze())
         
-        refractive_indices = torch.sum(P * self.n_database, dim=2) # batch size x number of layer x number of freq
-        
-        return (thicknesses, refractive_indices, P.squeeze())
-        
 class ResBlock(nn.Module):
     """docstring for ResBlock"""
     def __init__(self, dim=16):
