@@ -11,11 +11,7 @@ from net import Generator, ResGenerator
 class GLOnet():
     def __init__(self, params):
         # GPU 
-        self.cuda = torch.cuda.is_available()
-        if self.cuda:
-            self.dtype = torch.cuda.FloatTensor
-        else:
-            self.dtype = torch.FloatTensor
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             
         # construct
         if params.net == 'Res':
