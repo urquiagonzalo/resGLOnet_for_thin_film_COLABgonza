@@ -14,8 +14,8 @@ class GLOnet():
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.generator = self._init_generator(params)   
         self.optimizer = self._init_optimizer(params)
-        self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size = params.step_size, gamma = params.step_size)
-        
+        self.scheduler = self._init_scheduler(params)
+                
         # training parameters
         self.noise_dim = params.noise_dim
         self.numIter = params.numIter
@@ -62,6 +62,11 @@ class GLOnet():
         return torch.optim.Adam(self.generator.parameters(), lr=params.lr, 
                                 betas=(params.beta1, params.beta2), 
                                 weight_decay=params.weight_decay)
+    
+    def _init_scheduler(self, params):
+        return torch.optim.lr_scheduler.StepLR(self.optimizer, 
+                                            step_size=params.step_size, 
+                                            gamma=params.step_size)   
 
     def train(self):
         self.generator.train()
