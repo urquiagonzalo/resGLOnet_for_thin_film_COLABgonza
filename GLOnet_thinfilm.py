@@ -27,12 +27,7 @@ class GLOnet():
     
         # simulation parameters
         self.user_define = params.user_define
-        if params.user_define:
-            self.n_database = params.n_database
-        else:
-            self.materials = params.materials
-            self.matdatabase = params.matdatabase
-
+        self._init_simulation_parameters(params)
         self.n_bot = params.n_bot.type(self.dtype)  # number of frequencies or 1
         self.n_top = params.n_top.type(self.dtype)  # number of frequencies or 1
         self.k = params.k.type(self.dtype)  # number of frequencies
@@ -67,6 +62,23 @@ class GLOnet():
         return torch.optim.lr_scheduler.StepLR(self.optimizer, 
                                             step_size=params.step_size, 
                                             gamma=params.step_size)   
+
+    def _init_simulation_parameters(self, params):
+        if params.user_define:
+            if self.sensor:
+                self.n_database_empty = self.to_cuda_if_available(params.n_database_empty)
+                self.n_database_full = self.to_cuda_if_available(params.n_database_full)
+            else:
+                self.n_database = self.to_cuda_if_available(params.n_database)
+        else:
+            if self.sensor:
+                self.materials_empty = self.to_cuda_if_available(params.materials_empty)
+                self.matdatabase_empty = self.to_cuda_if_available(params.matdatabase_empty)
+                self.materials_full = self.to_cuda_if_available(params.materials_full)
+                self.matdatabase_full = self.to_cuda_if_available(params.matdatabase_full)
+            else:
+                self.matdatabase = self.to_cuda_if_available(params.matdatabase)
+                self.materials = self.to_cuda_if_available(params.materials)
 
     def train(self):
         self.generator.train()
