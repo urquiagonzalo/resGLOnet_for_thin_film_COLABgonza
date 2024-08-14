@@ -58,7 +58,11 @@ class GLOnet():
         self.refractive_indices_training = []
         self.thicknesses_training = []
         
-        
+    def to_cuda_if_available(self, tensor):
+        if torch.cuda.is_available():
+            return tensor.cuda()
+        return tensor   
+
     def train(self):
         self.generator.train()
             
