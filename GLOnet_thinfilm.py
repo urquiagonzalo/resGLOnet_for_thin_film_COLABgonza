@@ -1,9 +1,11 @@
 import matplotlib.pyplot as plt
 import torch
 import numpy as np
+import pandas as pd
 import math
 import torch.nn as nn
 import torch.nn.functional as F
+from scipy.interpolate import UnivariateSpline
 from TMM import *
 from tqdm import tqdm
 from net import Generator, ResGenerator
@@ -39,7 +41,11 @@ class GLOnet():
         self.pol = params.pol # str of pol
         self.target_reflection = self.to_cuda_if_available(params.target_reflection) if not self.sensor else None
         # 1 x number of frequencies x number of angles x (number of pol or 1)
-        
+
+        if self.sensor:
+            self.led_spline = self._create_spline("true-green-osram.csv")
+            self.ldr_spline = self._create_spline("ldr.csv")
+
         # tranining history
         self.loss_training = []
         self.refractive_indices_training = []
@@ -83,6 +89,13 @@ class GLOnet():
             else:
                 self.matdatabase = self.to_cuda_if_available(params.matdatabase)
                 self.materials = self.to_cuda_if_available(params.materials)
+
+    def _create_spline(self, filename):
+        df = pd.read_csv(filename, sep=';', decimal=',')
+        df.columns = ['Wavelength [nm]', 'Reflection spectra']
+        spline = UnivariateSpline(df['Wavelength [nm]'] / 1000, df['Reflection spectra'])
+        spline.set_smoothing_factor(0.006)
+        return spline
 
     def train(self):
         self.generator.train()
