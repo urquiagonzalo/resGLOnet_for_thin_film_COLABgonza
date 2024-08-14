@@ -27,13 +27,17 @@ class GLOnet():
     
         # simulation parameters
         self.user_define = params.user_define
+        if params.sensor:
+            self.sensor = True
+        else:
+            self.sensor = False       
         self._init_simulation_parameters(params)
         self.n_bot = self.to_cuda_if_available(params.n_bot)  # number of frequencies or 1
         self.n_top = self.to_cuda_if_available(params.n_top)  # number of frequencies or 1
         self.k = self.to_cuda_if_available(params.k)  # number of frequencies
         self.theta = self.to_cuda_if_available(params.theta) # number of angles       
         self.pol = params.pol # str of pol
-        self.target_reflection = params.target_reflection.type(self.dtype) 
+        self.target_reflection = self.to_cuda_if_available(params.target_reflection) if not self.sensor else None
         # 1 x number of frequencies x number of angles x (number of pol or 1)
         
         # tranining history
