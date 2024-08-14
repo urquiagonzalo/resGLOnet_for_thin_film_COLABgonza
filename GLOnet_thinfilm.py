@@ -12,15 +12,7 @@ class GLOnet():
     def __init__(self, params):
         # GPU 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            
-        # construct
-        if params.net == 'Res':
-            self.generator = ResGenerator(params)
-        else:
-            self.generator = Generator(params)
-        
-        if self.cuda: 
-            self.generator.cuda()
+        self.generator = self._init_generator(params)   
         self.optimizer = torch.optim.Adam(self.generator.parameters(), lr=params.lr, betas = (params.beta1, params.beta2), weight_decay = params.weight_decay)
         self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size = params.step_size, gamma = params.step_size)
         
@@ -58,6 +50,13 @@ class GLOnet():
         if torch.cuda.is_available():
             return tensor.cuda()
         return tensor   
+
+    def _init_generator(self, params):
+        if params.net == 'Res':
+            generator = ResGenerator(params)
+        elif params.net == 'Dnn':
+            generator = Generator(params)
+        return generator.to(self.device)
 
     def train(self):
         self.generator.train()
