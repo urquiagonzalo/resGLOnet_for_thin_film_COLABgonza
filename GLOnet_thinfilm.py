@@ -28,10 +28,10 @@ class GLOnet():
         # simulation parameters
         self.user_define = params.user_define
         self._init_simulation_parameters(params)
-        self.n_bot = params.n_bot.type(self.dtype)  # number of frequencies or 1
-        self.n_top = params.n_top.type(self.dtype)  # number of frequencies or 1
-        self.k = params.k.type(self.dtype)  # number of frequencies
-        self.theta = params.theta.type(self.dtype) # number of angles
+        self.n_bot = self.to_cuda_if_available(params.n_bot)  # number of frequencies or 1
+        self.n_top = self.to_cuda_if_available(params.n_top)  # number of frequencies or 1
+        self.k = self.to_cuda_if_available(params.k)  # number of frequencies
+        self.theta = self.to_cuda_if_available(params.theta) # number of angles       
         self.pol = params.pol # str of pol
         self.target_reflection = params.target_reflection.type(self.dtype) 
         # 1 x number of frequencies x number of angles x (number of pol or 1)
