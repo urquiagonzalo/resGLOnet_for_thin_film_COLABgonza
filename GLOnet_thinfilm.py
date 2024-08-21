@@ -236,7 +236,23 @@ class GLOnet():
         
     def sample_z(self, batch_size):
         return self.to_cuda_if_available(torch.randn(batch_size, self.noise_dim, requires_grad=True))
-            
+
+    def spectra_int(self, spectra, k, dim):
+        lambdas = 2*math.pi/self.k
+        return torch.trapz(spectra, lambdas, dim= dim)
+    
+    def sensor_signal(self, k, reflection_empty, reflection_full):
+        lambdas = 2 * math.pi / self.k
+        led_x_ldr = self.to_cuda_if_available(torch.from_numpy(self.led_spline(lambdas) * self.ldr_spline(lambdas)))
+        
+        signal_empty = torch.matmul(reflection_empty.squeeze(),torch.diag(led_x_ldr))
+        signal_full = torch.matmul(reflection_full.squeeze(),torch.diag(led_x_ldr))
+        signal_diff = signal_empty - signal_full
+        int_led = self.spectra_int(self.to_cuda_if_available(torch.from_numpy(self.led_spline(lambdas))), self.k, dim = 0)
+        int_diff = self.spectra_int(signal_diff, self.k, dim = 1)
+        sensor_signal= torch.abs(int_diff)/int_led
+        return sensor_signal   
+
     def global_loss_function(self, reflection):
         return -torch.mean(torch.exp(-torch.mean(torch.pow(reflection - self.target_reflection, 2), dim=(1,2,3))/self.sigma))
 
