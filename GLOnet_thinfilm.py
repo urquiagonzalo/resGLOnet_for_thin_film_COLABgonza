@@ -235,8 +235,8 @@ class GLOnet():
         self.alpha = round(normIter/0.05) * self.alpha_sup + 1.
         
     def sample_z(self, batch_size):
-        return (torch.randn(batch_size, self.noise_dim, requires_grad=True)).type(self.dtype)
-    
+        return self.to_cuda_if_available(torch.randn(batch_size, self.noise_dim, requires_grad=True))
+            
     def global_loss_function(self, reflection):
         return -torch.mean(torch.exp(-torch.mean(torch.pow(reflection - self.target_reflection, 2), dim=(1,2,3))/self.sigma))
 
