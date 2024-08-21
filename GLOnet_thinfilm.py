@@ -118,22 +118,30 @@ class GLOnet():
 
                 # sample z
                 z = self.sample_z(self.batch_size)
-
-                # generate a batch of iamges
-                thicknesses, refractive_indices, _ = self.generator(z, self.alpha)
-
+                
+                # generate a batch of images
+                if self.sensor:
+                    thicknesses, refractive_indices_empty, refractive_indices_full, _ = self.generator(z, self.alpha)
+                else:
+                    thicknesses, refractive_indices, _ = self.generator(z, self.alpha)
                 # calculate efficiencies and gradients using EM solver
-                reflection = TMM_solver(thicknesses, refractive_indices, self.n_bot, self.n_top, self.k, self.theta, self.pol)
-               
+                if self.sensor:
+                    reflection_empty = TMM_solver(thicknesses, refractive_indices_empty, self.n_bot, self.n_top, self.k, self.theta, self.pol)
+                    reflection_full = TMM_solver(thicknesses, refractive_indices_full, self.n_bot, self.n_top, self.k, self.theta, self.pol)
+                else:
+                    reflection = TMM_solver(thicknesses, refractive_indices, self.n_bot, self.n_top, self.k, self.theta, self.pol) 
+                
                 # free optimizer buffer 
                 self.optimizer.zero_grad()
 
                 # construct the loss 
+                sensor_signal = self.sensor_signal(self.k, reflection_empty, reflection_full) if self.sensor else None
+                
+                g_loss = self.global_loss_function(sensor_signal) if self.sensor else self.global_loss_function(reflection)
                 g_loss = self.global_loss_function(reflection)
-                
-                
+                                
                 # record history
-                self.record_history(g_loss, thicknesses, refractive_indices)
+                self.record_history(g_loss)
                 
                 # train the generator
                 g_loss.backward()
@@ -153,26 +161,62 @@ class GLOnet():
 
         self.generator.eval()
         z = self.sample_z(num_devices)
-        thicknesses, refractive_indices, P = self.generator(z, self.alpha)
-        result_mat = torch.argmax(P, dim=2).detach() # batch size x number of layer
+        if self.sensor:
+            thicknesses, refractive_indices_empty, refractive_indices_full, P = self.generator(z, self.alpha)
+            result_mat = torch.argmax(P, dim=2).detach() # batch size x number of layer
 
-        if not grayscale:
-            if self.user_define:
-                n_database = self.n_database # do not support dispersion
+            if not grayscale:
+                ref_idx_empty, ref_idx_full = self._calculate_refractive_indices(kvector)
             else:
-                n_database = self.matdatabase.interp_wv(2 * math.pi/kvector, self.materials, True).unsqueeze(0).unsqueeze(0).type(self.dtype)
+                if self.user_define:
+                    ref_idx_empty, ref_idx_full = refractive_indices_empty, refractive_indices_full
+                else:
+                    n_database_empty = self.to_cuda_if_available(self.matdatabase_empty.interp_wv(2 * math.pi/kvector, self.materials_empty, True).unsqueeze(0).unsqueeze(0))
+                    ref_idx_empty = torch.sum(P.unsqueeze(-1) * n_database_empty, dim=2)
+                    n_database_full = self.to_cuda_if_available(self.matdatabase_full.interp_wv(2 * math.pi/kvector, self.materials_full, True).unsqueeze(0).unsqueeze(0))
+                    ref_idx_full = torch.sum(P.unsqueeze(-1) * n_database_full, dim=2)
             
-            one_hot = torch.eye(len(self.materials)).type(self.dtype)
-            ref_idx = torch.sum(one_hot[result_mat].unsqueeze(-1) * n_database, dim=2)
+            reflection_empty = TMM_solver(thicknesses, ref_idx_empty, self.n_bot, self.n_top, self.to_cuda_if_available(kvector), self.to_cuda_if_available(inc_angles), pol)
+            reflection_full = TMM_solver(thicknesses, ref_idx_full, self.n_bot, self.n_top, self.to_cuda_if_available(kvector), self.to_cuda_if_available(inc_angles), pol)
+            
+            sensor_signal = self.sensor_signal(self.to_cuda_if_available(kvector), reflection_empty, reflection_full)
+            
+            return thicknesses, result_mat, sensor_signal, ref_idx_empty, reflection_empty, ref_idx_full, reflection_full
+        
         else:
-            if self.user_define:
-                ref_idx = refractive_indices
+            thicknesses, refractive_indices, P = self.generator(z, self.alpha)
+            result_mat = torch.argmax(P, dim=2).detach() # batch size x number of layer
+            if not grayscale:
+                if self.user_define:
+                    n_database = self.n_database # do not support dispersion
+                else:
+                    n_database = self.matdatabase.interp_wv(2 * math.pi/kvector, self.materials, True).unsqueeze(0).unsqueeze(0).type(self.dtype)
+            
+                one_hot = torch.eye(len(self.materials)).type(self.dtype)
+                ref_idx = torch.sum(one_hot[result_mat].unsqueeze(-1) * n_database, dim=2)
             else:
-                n_database = self.matdatabase.interp_wv(2 * math.pi/kvector, self.materials, True).unsqueeze(0).unsqueeze(0).type(self.dtype)
-                ref_idx = torch.sum(P.unsqueeze(-1) * n_database, dim=2)
+                if self.user_define:
+                    ref_idx = refractive_indices
+                else:
+                    n_database = self.matdatabase.interp_wv(2 * math.pi/kvector, self.materials, True).unsqueeze(0).unsqueeze(0).type(self.dtype)
+                    ref_idx = torch.sum(P.unsqueeze(-1) * n_database, dim=2)
 
-        reflection = TMM_solver(thicknesses, ref_idx, self.n_bot, self.n_top, kvector.type(self.dtype), inc_angles.type(self.dtype), pol)
-        return (thicknesses, ref_idx, result_mat, reflection)
+            reflection = TMM_solver(thicknesses, ref_idx, self.n_bot, self.n_top, kvector.type(self.dtype), inc_angles.type(self.dtype), pol)
+            return (thicknesses, ref_idx, result_mat, reflection)
+      
+    def _calculate_refractive_indices(self, result_mat, kvector):
+        if self.user_define:
+            n_database_empty = self.to_cuda_if_available(self.n_database_empty) # do not support dispersion
+            n_database_full = self.to_cuda_if_available(self.n_database_full) # do not support dispersion
+        else:
+            n_database_empty = self.to_cuda_if_available(self.matdatabase_empty.interp_wv(2 * math.pi / kvector, self.materials_empty, True).unsqueeze(0).unsqueeze(0))
+            n_database_full = self.to_cuda_if_available(self.matdatabase_full.interp_wv(2 * math.pi / kvector, self.materials_full, True).unsqueeze(0).unsqueeze(0))
+        
+        one_hot = self.to_cuda_if_available(torch.eye(len(self.materials_empty)))
+        one_hot_mat = one_hot[result_mat].unsqueeze(-1)
+        ref_idx_empty = torch.sum(one_hot_mat * n_database_empty, dim=2)
+        ref_idx_full = torch.sum(one_hot_mat * n_database_full, dim=2)
+        return ref_idx_empty, ref_idx_full
     
     def _TMM_solver(self, thicknesses, result_mat, kvector = None, inc_angles = None, pol = None):
         if kvector is None:
