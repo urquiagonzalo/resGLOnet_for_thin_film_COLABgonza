@@ -263,10 +263,10 @@ class GLOnet():
         return -torch.mean(torch.exp((-metric - self.robust_coeff *torch.mean(torch.abs(dmdt[0]), dim=1))/self.sigma))
 
     def record_history(self, it, loss, thicknesses, refractive_indices):
-        self.loss_training.append(loss.detach())
+        self.loss_training.append(loss.detach().numpy())
         if it == self.numIter:
-            self.thicknesses_training.append(thicknesses.detach())
-            self.refractive_indices_training.append(refractive_indices.detach())
+            self.thicknesses_training.append(thicknesses.detach().numpy())
+            self.refractive_indices_training.append(refractive_indices.detach().numpy())
         
     def viz_training(self):
         plt.figure(figsize = (20, 5))
@@ -277,7 +277,7 @@ class GLOnet():
         plt.xticks(fontsize=14)
         plt.yticks(fontsize=14)
         plt.savefig(str(self.ruta)+'/seed_'+str(self.seed)+'/loss.png', dpi=300)
-        np.savez(str(self.ruta)+'/seed_'+str(self.seed)+'/loss', self.loss_training.numpy())
-        np.savez(str(self.ruta)+'/seed_'+str(self.seed)+'/thicknesses', self.thicknesses_training.numpy())
-        np.savez(str(self.ruta)+'/seed_'+str(self.seed)+'/ref_idxs', self.refractive_indices_training.numpy())
+        np.savez(str(self.ruta)+'/seed_'+str(self.seed)+'/loss', self.loss_training)
+        np.savez(str(self.ruta)+'/seed_'+str(self.seed)+'/thicknesses', self.thicknesses_training)
+        np.savez(str(self.ruta)+'/seed_'+str(self.seed)+'/ref_idxs', self.refractive_indices_training)
         
