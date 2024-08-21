@@ -260,10 +260,10 @@ class GLOnet():
         dmdt = torch.autograd.grad(metric.mean(), thicknesses, create_graph=True)
         return -torch.mean(torch.exp((-metric - self.robust_coeff *torch.mean(torch.abs(dmdt[0]), dim=1))/self.sigma))
 
-    def record_history(self, loss, thicknesses, refractive_indices):
+    def record_history(self, loss):
         self.loss_training.append(loss.detach())
-        self.thicknesses_training.append(thicknesses.mean().detach())
-        self.refractive_indices_training.append(refractive_indices.mean().detach())
+        #self.thicknesses_training.append(thicknesses.mean().detach())
+        #self.refractive_indices_training.append(refractive_indices.mean().detach())
         
     def viz_training(self):
         plt.figure(figsize = (20, 5))
