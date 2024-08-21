@@ -45,7 +45,9 @@ class GLOnet():
         if self.sensor:
             self.led_spline = self._create_spline("true-green-osram.csv")
             self.ldr_spline = self._create_spline("ldr.csv")
-
+        
+        self.ruta = params.ruta
+        self.seed = params.seed
         # tranining history
         self.loss_training = []
         self.refractive_indices_training = []
@@ -140,7 +142,7 @@ class GLOnet():
                 g_loss = self.global_loss_function(sensor_signal) if self.sensor else self.global_loss_function(reflection)
                                 
                 # record history
-                self.record_history(g_loss, thicknesses, refractive_indices) if not self.sensor else self.record_history(g_loss, thicknesses, refractive_indices_empty)
+                self.record_history(it, g_loss, thicknesses, refractive_indices) if not self.sensor else self.record_history(g_loss, thicknesses, refractive_indices_empty)
                 
                 # train the generator
                 g_loss.backward()
@@ -260,10 +262,11 @@ class GLOnet():
         dmdt = torch.autograd.grad(metric.mean(), thicknesses, create_graph=True)
         return -torch.mean(torch.exp((-metric - self.robust_coeff *torch.mean(torch.abs(dmdt[0]), dim=1))/self.sigma))
 
-    def record_history(self, loss, thicknesses, refractive_indices):
+    def record_history(self, it, loss, thicknesses, refractive_indices):
         self.loss_training.append(loss.detach())
-        self.thicknesses_training.append(thicknesses.detach())
-        self.refractive_indices_training.append(refractive_indices.detach())
+        if it == self.numIter:
+            self.thicknesses_training.append(thicknesses.detach())
+            self.refractive_indices_training.append(refractive_indices.detach())
         
     def viz_training(self):
         plt.figure(figsize = (20, 5))
@@ -273,5 +276,8 @@ class GLOnet():
         plt.xlabel('Iterations', fontsize=18)
         plt.xticks(fontsize=14)
         plt.yticks(fontsize=14)
-        
+        plt.savefig(str(self.ruta)+'/seed_'+str(self.seed)+'/loss.png', dpi=300)
+        np.savez(str(self.ruta)+'/seed_'+str(self.seed)+'/loss', self.loss_training.numpy())
+        np.savez(str(self.ruta)+'/seed_'+str(self.seed)+'/thicknesses', self.thicknesses_training.numpy())
+        np.savez(str(self.ruta)+'/seed_'+str(self.seed)+'/ref_idxs', self.refractive_indices_training.numpy())
         
