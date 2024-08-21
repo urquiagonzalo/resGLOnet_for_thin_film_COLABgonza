@@ -140,7 +140,7 @@ class GLOnet():
                 g_loss = self.global_loss_function(sensor_signal) if self.sensor else self.global_loss_function(reflection)
                                 
                 # record history
-                self.record_history(g_loss)
+                self.record_history(g_loss, thicknesses, refractive_indices) if not self.sensor else self.record_history(g_loss, thicknesses, refractive_indices_empty)
                 
                 # train the generator
                 g_loss.backward()
@@ -260,10 +260,10 @@ class GLOnet():
         dmdt = torch.autograd.grad(metric.mean(), thicknesses, create_graph=True)
         return -torch.mean(torch.exp((-metric - self.robust_coeff *torch.mean(torch.abs(dmdt[0]), dim=1))/self.sigma))
 
-    def record_history(self, loss):
+    def record_history(self, loss, thicknesses, refractive_indices):
         self.loss_training.append(loss.detach())
-        #self.thicknesses_training.append(thicknesses.mean().detach())
-        #self.refractive_indices_training.append(refractive_indices.mean().detach())
+        self.thicknesses_training.append(thicknesses.detach())
+        self.refractive_indices_training.append(refractive_indices.detach())
         
     def viz_training(self):
         plt.figure(figsize = (20, 5))
