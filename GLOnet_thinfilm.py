@@ -138,7 +138,6 @@ class GLOnet():
                 sensor_signal = self.sensor_signal(self.k, reflection_empty, reflection_full) if self.sensor else None
                 
                 g_loss = self.global_loss_function(sensor_signal) if self.sensor else self.global_loss_function(reflection)
-                g_loss = self.global_loss_function(reflection)
                                 
                 # record history
                 self.record_history(g_loss)
@@ -253,9 +252,9 @@ class GLOnet():
         sensor_signal= torch.abs(int_diff)/int_led
         return sensor_signal   
 
-    def global_loss_function(self, reflection):
-        return -torch.mean(torch.exp(-torch.mean(torch.pow(reflection - self.target_reflection, 2), dim=(1,2,3))/self.sigma))
-
+    def global_loss_function(self, signal):
+        return -torch.mean(torch.exp(-torch.mean(torch.pow(signal - self.target_reflection, 2), dim=(1,2,3))/self.sigma)) if not self.sensor else -torch.mean(torch.exp(-torch.pow(signal - 1, 2)/self.sigma))
+        
     def global_loss_function_robust(self, reflection, thicknesses):
         metric = torch.mean(torch.pow(reflection - self.target_reflection, 2), dim=(1,2,3))
         dmdt = torch.autograd.grad(metric.mean(), thicknesses, create_graph=True)
