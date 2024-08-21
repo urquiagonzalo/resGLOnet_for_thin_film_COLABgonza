@@ -142,7 +142,7 @@ class GLOnet():
                 g_loss = self.global_loss_function(sensor_signal) if self.sensor else self.global_loss_function(reflection)
                                 
                 # record history
-                self.record_history(it, g_loss, thicknesses, refractive_indices) if not self.sensor else self.record_history(g_loss, thicknesses, refractive_indices_empty)
+                self.record_history(it, g_loss, thicknesses, refractive_indices) if not self.sensor else self.record_history(it, g_loss, thicknesses, refractive_indices_empty)
                 
                 # train the generator
                 g_loss.backward()
