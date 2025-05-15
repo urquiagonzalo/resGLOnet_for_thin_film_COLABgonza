@@ -54,7 +54,7 @@ class GLOnet():
         self.thicknesses_training = []
         
     def to_cuda_if_available(self, tensor):
-        if torch.cuda.is_available():
+        if torch.is_tensor(tensor) and torch.cuda.is_available():
             return tensor.cuda()
         return tensor   
 
