@@ -271,7 +271,7 @@ class GLOnet():
     def viz_training(self):
         plt.figure(figsize = (20, 5))
         plt.subplot(131)
-        plt.plot(self.loss_training)
+        plt.plot(torch.tensor(self.loss_training).cpu().detach().numpy())
         plt.ylabel('Loss', fontsize=18)
         plt.xlabel('Iterations', fontsize=18)
         plt.xticks(fontsize=14)
