@@ -59,8 +59,13 @@ def transfer_matrix_stack(thicknesses, refractive_indices, k, ky, pol = 'TM'):
         num_pol = 1
     elif pol == 'both':
         num_pol = 2
-
-    T_stack = torch.eye(2, 2, dtype=torch.complex64).unsqueeze(0).unsqueeze(0).unsqueeze(0).unsqueeze(0)
+   
+    
+    # El tensor T_stack se crea con torch.eye(...), que por defecto se genera en CPU. Es necesario agregar la siguiente línea
+    # Nueva líneas agregada por mi para solucionar este problema:
+    device = thicknesses.device   
+    # T_stack = torch.eye(2, 2, dtype=torch.complex64).unsqueeze(0).unsqueeze(0).unsqueeze(0).unsqueeze(0) # Línea anterior
+    T_stack = torch.eye(2, 2, dtype=torch.complex64, device=device).unsqueeze(0).unsqueeze(0).unsqueeze(0).unsqueeze(0)   # Línea modificada
     T_stack = T_stack.repeat(batch_size, numfreq, num_angles, num_pol, 1, 1)
 
     for i in range(N):
@@ -156,14 +161,6 @@ def TMM_solver(thicknesses, refractive_indices, n_bot, n_top, k, theta, pol = 'T
     # S matrix
     S_stack = torch.matmul(torch.inverse(A2F_top), torch.matmul(T_stack, A2F_bot))
 
-    ############## GONZA ######################
-
-    if T_stack.device != T_layer.device:
-        T_layer = T_layer.to(T_stack.device)
-    
-    T_stack = torch.matmul(T_stack, T_layer)
-    ############## GONZA ######################
-    
     # reflection 
     Reflection = torch.pow(torch.abs(S_stack[:,:,:,:,1,0]), 2) / torch.pow(torch.abs(S_stack[:,:,:,:,1,1]), 2)
     Reflection = Reflection.double()
