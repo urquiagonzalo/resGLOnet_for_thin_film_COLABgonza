@@ -157,6 +157,10 @@ def TMM_solver(thicknesses, refractive_indices, n_bot, n_top, k, theta, pol = 'T
     S_stack = torch.matmul(torch.inverse(A2F_top), torch.matmul(T_stack, A2F_bot))
 
     ############## GONZA ######################
+
+    print("T_stack device:", T_stack.device)
+    print("T_layer device:", T_layer.device)
+
     if T_stack.device != T_layer.device:
     T_layer = T_layer.to(T_stack.device)
     
