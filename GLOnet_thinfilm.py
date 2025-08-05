@@ -266,6 +266,11 @@ class GLOnet():
         print("reflection_empty.shape:", reflection_empty.shape)
         print("led_x_ldr.shape:", led_x_ldr.shape)
         print("torch.diag(led_x_ldr).shape:", torch.diag(led_x_ldr).shape)
+
+        #Corrección GU (VER): Al poner el print anterior tengo: 
+        #reflection_empty.shape: torch.Size([100, 400, 200, 2]) 
+        #led_x_ldr.shape: torch.Size([100])
+        #torch.diag(led_x_ldr).shape: torch.Size([100, 100])
         
         signal_empty = torch.matmul(reflection_empty.squeeze(),torch.diag(led_x_ldr))
         signal_full = torch.matmul(reflection_full.squeeze(),torch.diag(led_x_ldr))
