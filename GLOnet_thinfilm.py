@@ -169,7 +169,10 @@ class GLOnet():
             result_mat = torch.argmax(P, dim=2).detach() # batch size x number of layer
 
             if not grayscale:
+                #Corrección GU: faltás pasarle el primer argumento requerido: result_mat?
+                #Modifico la siguiente línea
                 ref_idx_empty, ref_idx_full = self._calculate_refractive_indices(kvector)
+                ref_idx_empty, ref_idx_full = self._calculate_refractive_indices(result_mat, kvector)
             else:
                 if self.user_define:
                     ref_idx_empty, ref_idx_full = refractive_indices_empty, refractive_indices_full
