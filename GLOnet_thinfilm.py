@@ -292,7 +292,11 @@ class GLOnet():
     def viz_training(self):
         plt.figure(figsize = (20, 5))
         plt.subplot(131)
+        #CorreciónGU: El problema es que self.loss_training es una lista de NumPy arrays o tensores, 
+        #y estás tratando de convertirla directamente a un tensor de PyTorch con
+        #Modifico la siguiente línea
         plt.plot(torch.tensor(self.loss_training).cpu().detach().numpy())
+        plt.plot(np.array(self.loss_training))
         plt.ylabel('Loss', fontsize=18)
         plt.xlabel('Iterations', fontsize=18)
         plt.xticks(fontsize=14)
