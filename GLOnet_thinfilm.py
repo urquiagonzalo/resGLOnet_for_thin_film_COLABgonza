@@ -272,7 +272,10 @@ class GLOnet():
         return -torch.mean(torch.exp((-metric - self.robust_coeff *torch.mean(torch.abs(dmdt[0]), dim=1))/self.sigma))
 
     def record_history(self, it, loss, thicknesses, refractive_indices):
-        self.loss_training.append(loss.detach().numpy())
+        #CorreciónGU: loss es un tensor que está en la GPU (cuda:0), y estás intentando convertirlo a un NumPy array directamente
+        #Modifico la siguiente línea
+        #self.loss_training.append(loss.detach().numpy())
+        self.loss_training.append(loss.detach().cpu().numpy())
         if it == self.numIter:
             self.thicknesses_training.append(thicknesses.detach().numpy())
             self.refractive_indices_training.append(refractive_indices.detach().numpy())
