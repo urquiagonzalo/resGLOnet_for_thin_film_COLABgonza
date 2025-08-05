@@ -60,10 +60,10 @@ def transfer_matrix_stack(thicknesses, refractive_indices, k, ky, pol = 'TM'):
     elif pol == 'both':
         num_pol = 2
    
-    
-    # El tensor T_stack se crea con torch.eye(...), que por defecto se genera en CPU. Es necesario agregar la siguiente línea
-    # Nueva líneas agregada por mi para solucionar este problema:
+    #CorreciónGU: el tensor T_stack se crea con torch.eye(...), que por defecto se genera en CPU. Es necesario agregar la siguiente línea
+    # Nueva línea agregada para solucionar este problema:
     device = thicknesses.device   
+    #CorreciónGU:modifico la siguiente línea
     # T_stack = torch.eye(2, 2, dtype=torch.complex64).unsqueeze(0).unsqueeze(0).unsqueeze(0).unsqueeze(0) # Línea anterior
     T_stack = torch.eye(2, 2, dtype=torch.complex64, device=device).unsqueeze(0).unsqueeze(0).unsqueeze(0).unsqueeze(0)   # Línea modificada
     T_stack = T_stack.repeat(batch_size, numfreq, num_angles, num_pol, 1, 1)
