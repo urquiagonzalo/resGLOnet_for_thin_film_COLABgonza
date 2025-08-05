@@ -262,7 +262,7 @@ class GLOnet():
 
         led_vals = self.led_spline(lambdas)
         ldr_vals = self.ldr_spline(lambdas)
-        led_x_ldr = self.to_cuda_if_available(torch.from_numpy(led_vals * ldr_vals).float())
+        led_x_ldr = self.to_cuda_if_available(torch.from_numpy(led_vals * ldr_vals))
         
         #led_x_ldr = self.to_cuda_if_available(torch.from_numpy(self.led_spline(lambdas) * self.ldr_spline(lambdas)))
 
