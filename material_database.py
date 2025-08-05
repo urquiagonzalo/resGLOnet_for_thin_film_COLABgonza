@@ -46,7 +46,11 @@ class MatDatabase(object):
 			k_data[i, :] = np.interp(wv_in, mat[0], mat[2])
 
 		if ignoreloss:
-			return torch.complex(torch.tensor(n_data), torch.zeros_like(k_data))
+			#"corrección GMU: torch.zeros_like(...) espera un tensor de PyTorch como entrada, pero le estámos pasando un numpy.ndarray.
+			#Corregimos la siguiente línea
+			#return torch.complex(torch.tensor(n_data), torch.zeros_like(k_data))
+			k_data_tensor = torch.tensor(k_data)
+   			return torch.complex(torch.tensor(n_data), torch.zeros_like(k_data_tensor))
 		else:
 			return torch.complex(torch.tensor(n_data), torch.tensor(k_data))
 		
