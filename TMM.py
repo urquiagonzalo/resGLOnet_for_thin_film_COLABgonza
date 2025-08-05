@@ -55,8 +55,6 @@ def transfer_matrix_stack(thicknesses, refractive_indices, k, ky, pol = 'TM'):
     batch_size = thicknesses.size(0)
     num_angles = ky.size(2)  
     
-    #CorreciónGU: agrego "pol = pol.lower()"
-    pol = pol.lower()
     if pol in ['TM', 'TE']:
         num_pol = 1
     elif pol == 'both':
