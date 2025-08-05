@@ -258,6 +258,7 @@ class GLOnet():
         #numpy() → lo convierte a un NumPy array (que SciPy puede usar)
         
         #lambdas = (2 * math.pi / self.k).cpu().numpy()
+        lambdas = (2 * math.pi / self.k).detach().cpu().numpy()
         led_x_ldr = self.to_cuda_if_available(torch.from_numpy(self.led_spline(lambdas) * self.ldr_spline(lambdas)))
 
         #Corrección GU (VER):  en la siguiente línea se está tratando de hacer tratando de hacer un producto matricial con torch.matmul() 
