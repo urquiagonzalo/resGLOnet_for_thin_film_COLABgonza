@@ -248,21 +248,15 @@ class GLOnet():
         return torch.trapz(spectra, lambdas, dim= dim)
     
     def sensor_signal(self, k, reflection_empty, reflection_full):
-        lambdas = 2 * math.pi / self.k
         
-        #Corrección GU: Reemplazo la línea anterior por la que sigue. Esto es una sugerencia de chatgpt. Me dice: 
+        #Corrección GU: Reemplazo la siguiente línea. Esto es una sugerencia de chatgpt. Me dice: 
         #Aquí, lambdas es un tensor de PyTorch que está en la GPU, pero las funciones self.led_spline 
         #y self.ldr_spline (probablemente splines de SciPy) esperan una entrada de tipo NumPy array en la CPU.
         #Esto hace dos cosas:
         #cpu() → mueve el tensor a la CPU (si estaba en la GPU)
         #numpy() → lo convierte a un NumPy array (que SciPy puede usar)
-        
-        #lambdas = (2 * math.pi / self.k).cpu().numpy()
-        lambdas = (2 * math.pi / self.k).detach().cpu().numpy()
-
-        led_vals = self.led_spline(lambdas)
-        ldr_vals = self.ldr_spline(lambdas)
-        led_x_ldr = self.to_cuda_if_available(torch.from_numpy(led_vals * ldr_vals))
+        #lambdas = 2 * math.pi / self.k
+        lambdas = (2 * math.pi / self.k).cpu().numpy()
         
         #led_x_ldr = self.to_cuda_if_available(torch.from_numpy(self.led_spline(lambdas) * self.ldr_spline(lambdas)))
 
