@@ -50,7 +50,7 @@ class MatDatabase(object):
 			#Corregimos la siguiente línea
 			#return torch.complex(torch.tensor(n_data), torch.zeros_like(k_data))
 			k_data_tensor = torch.tensor(k_data)
-   			return torch.complex(torch.tensor(n_data), torch.zeros_like(k_data_tensor))
+			return torch.complex(torch.tensor(n_data), torch.zeros_like(k_data_tensor))
 		else:
 			return torch.complex(torch.tensor(n_data), torch.tensor(k_data))
 		
