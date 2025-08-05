@@ -260,10 +260,12 @@ class GLOnet():
         #lambdas = (2 * math.pi / self.k).cpu().numpy()
         led_x_ldr = self.to_cuda_if_available(torch.from_numpy(self.led_spline(lambdas) * self.ldr_spline(lambdas)))
 
-        #Corrección GU (VER): torch.matmul(reflection_empty.squeeze(), torch.diag(led_x_ldr)) 
-        #intenta multiplicar matrices con dimensiones (8000000, 2) y (100, 100). Como 2 ≠ 100, la multiplicación falla.
+        #Corrección GU (VER):  en la siguiente línea se está tratando de hacer tratando de hacer un producto matricial con torch.matmul() 
+        # entre dos tensores que no tienen dimensiones compatibles. reflection_empty.squeeze() tiene shape [8000000, 2]
+        # y torch.diag(led_x_ldr) tiene shape [100, 100] Y no se puede multiplicar una matriz de 8000000x2 por una de 100x100.
         print("reflection_empty.shape:", reflection_empty.shape)
         print("led_x_ldr.shape:", led_x_ldr.shape)
+        print("torch.diag(led_x_ldr).shape:", torch.diag(led_x_ldr).shape)
         
         signal_empty = torch.matmul(reflection_empty.squeeze(),torch.diag(led_x_ldr))
         signal_full = torch.matmul(reflection_full.squeeze(),torch.diag(led_x_ldr))
