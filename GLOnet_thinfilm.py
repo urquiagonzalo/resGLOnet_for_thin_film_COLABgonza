@@ -171,7 +171,7 @@ class GLOnet():
             if not grayscale:
                 #Corrección GU: faltás pasarle el primer argumento requerido: result_mat?
                 #Modifico la siguiente línea
-                ref_idx_empty, ref_idx_full = self._calculate_refractive_indices(kvector)
+                #ref_idx_empty, ref_idx_full = self._calculate_refractive_indices(kvector)
                 ref_idx_empty, ref_idx_full = self._calculate_refractive_indices(result_mat, kvector)
             else:
                 if self.user_define:
