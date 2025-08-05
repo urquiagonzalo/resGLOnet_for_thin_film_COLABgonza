@@ -277,8 +277,17 @@ class GLOnet():
         #self.loss_training.append(loss.detach().numpy())
         self.loss_training.append(loss.detach().cpu().numpy())
         if it == self.numIter:
-            self.thicknesses_training.append(thicknesses.detach().numpy())
-            self.refractive_indices_training.append(refractive_indices.detach().numpy())
+            #CorreciónGU: thicknesses todavía está en la GPU, y como antes, estás intentando convertirlo a NumPy 
+            #directamente, lo cual no se puede hacer.
+            #Modifico la siguiente línea
+            #self.thicknesses_training.append(thicknesses.detach().numpy())
+            self.thicknesses_training.append(thicknesses.detach().cpu().numpy())
+            
+            #CorreciónGU: Y en la siguiente línea te va a pasar lo mismo con refractive_indices, así que también actualizala:
+            #Modifico la siguiente línea
+            #self.refractive_indices_training.append(refractive_indices.detach().numpy())
+            self.refractive_indices_training.append(refractive_indices.detach().cpu().numpy())
+    
         
     def viz_training(self):
         plt.figure(figsize = (20, 5))
