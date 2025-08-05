@@ -9,6 +9,8 @@ from scipy.interpolate import UnivariateSpline
 from TMM import *
 from tqdm import tqdm
 from net import Generator, ResGenerator
+#CorreciónGU: importo os. La necesito para crear carpeta hacia el final
+import os
 
 class GLOnet():
     def __init__(self, params):
@@ -301,6 +303,12 @@ class GLOnet():
         plt.xlabel('Iterations', fontsize=18)
         plt.xticks(fontsize=14)
         plt.yticks(fontsize=14)
+        #CorreciónGU: antes de llamar a plt.savefig(), se debe crear la carpeta (y todas las subcarpetas necesarias) 
+        #con os.makedirs()
+        #¿Dónde crea la carpeta? Cuando usás os.makedirs(path) con una ruta relativa (como 'N8/final/seed_1'), 
+        #la carpeta se crea en el sistema de archivos virtual de Colab, es decir, en la máquina virtual donde corre tu sesión.
+        folder_path = os.path.join(str(self.ruta), 'seed_' + str(self.seed))
+        os.makedirs(folder_path, exist_ok=True)
         plt.savefig(str(self.ruta)+'/seed_'+str(self.seed)+'/loss.png', dpi=300)
         np.savez(str(self.ruta)+'/seed_'+str(self.seed)+'/loss', self.loss_training)
         np.savez(str(self.ruta)+'/seed_'+str(self.seed)+'/thicknesses', self.thicknesses_training)
