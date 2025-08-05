@@ -248,17 +248,22 @@ class GLOnet():
         return torch.trapz(spectra, lambdas, dim= dim)
     
     def sensor_signal(self, k, reflection_empty, reflection_full):
-        #lambdas = 2 * math.pi / self.k
+        lambdas = 2 * math.pi / self.k
         
-        #Reemplazo la línea anterior por la que sigue. Esto es una sugerencia de chatgpt. Me dice: 
+        #Corrección GU: Reemplazo la línea anterior por la que sigue. Esto es una sugerencia de chatgpt. Me dice: 
         #Aquí, lambdas es un tensor de PyTorch que está en la GPU, pero las funciones self.led_spline 
         #y self.ldr_spline (probablemente splines de SciPy) esperan una entrada de tipo NumPy array en la CPU.
         #Esto hace dos cosas:
         #cpu() → mueve el tensor a la CPU (si estaba en la GPU)
         #numpy() → lo convierte a un NumPy array (que SciPy puede usar)
         
-        lambdas = (2 * math.pi / self.k).cpu().numpy()
+        #lambdas = (2 * math.pi / self.k).cpu().numpy()
         led_x_ldr = self.to_cuda_if_available(torch.from_numpy(self.led_spline(lambdas) * self.ldr_spline(lambdas)))
+
+        #Corrección GU (VER): torch.matmul(reflection_empty.squeeze(), torch.diag(led_x_ldr)) 
+        #intenta multiplicar matrices con dimensiones (8000000, 2) y (100, 100). Como 2 ≠ 100, la multiplicación falla.
+        print("reflection_empty.shape:", reflection_empty.shape)
+        print("led_x_ldr.shape:", led_x_ldr.shape)
         
         signal_empty = torch.matmul(reflection_empty.squeeze(),torch.diag(led_x_ldr))
         signal_full = torch.matmul(reflection_full.squeeze(),torch.diag(led_x_ldr))
